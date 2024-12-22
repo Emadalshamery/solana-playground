@@ -24,7 +24,7 @@
     "@metaplex-foundation/js": "^0.19.4",
     "@metaplex-foundation/mpl-bubblegum": "*",
     "@metaplex-foundation/mpl-candy-machine-core": "*",
-    "@metaplex-foundation/mpl-token-metadata": "*",
+    "@metaplex-foundation/mpl-token-metadata": "3.0.0",
     "@project-serum/anchor": "^0.23.0",
     "@solana-playground/anchor-cli": "../wasm/anchor-cli/pkg",
     "@solana-playground/playnet": "../wasm/pkgs/playnet",
