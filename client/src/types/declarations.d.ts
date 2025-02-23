@@ -2,14 +2,17 @@ import "styled-components";
 
 import { COMMANDS } from "../commands";
 import { FRAMEWORKS } from "../frameworks";
+import { LANGUAGES } from "../languages";
 import { ROUTES } from "../routes";
 import { MAIN_SECONDARY, SIDEBAR } from "../views";
 import {
   Arrayable,
   ClientPackageName,
   Disposable,
+  OrString,
   SyncOrAsync,
-  ThemeReady,
+  Theme,
+  TutorialDataParam,
 } from "../utils/pg";
 
 /** Global overrides */
@@ -34,6 +37,9 @@ global {
     importable: ClientPackageName[];
   };
 
+  /** Array of all markdown tutorial data */
+  const MARKDOWN_TUTORIALS: TutorialDataParam[];
+
   /** Map of kebab-case tutorial names to thumbnail file names */
   const TUTORIAL_THUMBNAIL_MAP: { [tutorialName: string]: string };
 }
@@ -44,10 +50,16 @@ global {
   type FrameworkName = typeof FRAMEWORKS[number]["name"];
 }
 
+// Language name
+global {
+  /** Language names */
+  type LanguageName = typeof LANGUAGES[number]["name"];
+}
+
 // Route
 global {
   /** All route path names */
-  type RoutePath = typeof ROUTES[number]["path"];
+  type RoutePath = OrString<typeof ROUTES[number]["path"]>;
 }
 
 // View
@@ -66,5 +78,5 @@ global {
 }
 
 declare module "styled-components" {
-  export interface DefaultTheme extends ThemeReady {}
+  export interface DefaultTheme extends Theme {}
 }

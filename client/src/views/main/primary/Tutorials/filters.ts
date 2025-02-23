@@ -1,24 +1,18 @@
-import {
-  TutorialLevel,
-  TUTORIAL_FRAMEWORKS,
-  TUTORIAL_LANGUAGES,
-  TUTORIAL_LEVELS,
-} from "../../../../utils/pg";
+import { PgFramework, PgLanguage, TUTORIAL_LEVELS } from "../../../../utils/pg";
 
 /** All tutorial filters */
 export const FILTERS = [
   {
     param: "level",
     filters: TUTORIAL_LEVELS,
-    sortFn: sortByLevel,
   },
   {
     param: "framework",
-    filters: TUTORIAL_FRAMEWORKS,
+    filters: PgFramework.all.map((f) => f.name),
   },
   {
     param: "languages",
-    filters: TUTORIAL_LANGUAGES,
+    filters: PgLanguage.all.map((lang) => lang.name),
   },
   // TODO: Enable once there are more tutorials with various categories
   // {
@@ -26,8 +20,3 @@ export const FILTERS = [
   //   filters: TUTORIAL_CATEGORIES,
   // },
 ] as const;
-
-/** Sort based on `TutorialLevel`. */
-export function sortByLevel<T extends { level: TutorialLevel }>(a: T, b: T) {
-  return TUTORIAL_LEVELS.indexOf(a.level) - TUTORIAL_LEVELS.indexOf(b.level);
-}

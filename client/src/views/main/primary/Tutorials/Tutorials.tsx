@@ -2,34 +2,35 @@ import styled, { css } from "styled-components";
 
 import FeaturedTutorial from "./FeaturedTutorial";
 import TutorialCard from "./TutorialCard";
-import FilterGroup from "../../../../components/FilterGroup";
+import FilterGroups from "../../../../components/FilterGroups";
 import Link from "../../../../components/Link";
 import SearchBar from "../../../../components/SearchBar";
 import Text from "../../../../components/Text";
-import { FILTERS, sortByLevel } from "./filters";
+import { FILTERS } from "./filters";
 import { Sad } from "../../../../components/Icons";
 import { useFilteredSearch } from "../../../../hooks";
 import { GITHUB_URL } from "../../../../constants";
-import { PgTheme, PgTutorial } from "../../../../utils/pg";
-
-/**
- * Tutorial items sorted by date.
- *
- * The first 3 tutorials are kept in order because they are essential "Hello
- * world" tutorials. The remaining tutorials are sorted from the newest to the
- * oldest.
- */
-const tutorials = [
-  ...PgTutorial.tutorials.slice(0, 3),
-  ...PgTutorial.tutorials.slice(3).sort(() => -1),
-];
+import { PgTheme, PgTutorial, TUTORIAL_LEVELS } from "../../../../utils/pg";
 
 export const Tutorials = () => {
   const filteredSearch = useFilteredSearch({
     route: "/tutorials",
-    items: tutorials,
+    items: PgTutorial.all,
     filters: FILTERS,
-    sort: sortByLevel,
+    sort: (a, b) => {
+      // Prioritize "Hello world" tutorials
+      if (a.name.startsWith("Hello")) return a.name.localeCompare(b.name);
+
+      // If different level, sort by level (beginner to advanced)
+      if (a.level !== b.level) {
+        return (
+          TUTORIAL_LEVELS.indexOf(a.level) - TUTORIAL_LEVELS.indexOf(b.level)
+        );
+      }
+
+      // Same level, sort by creation date (newest to oldest)
+      return b.unixTimestamp - a.unixTimestamp;
+    },
   });
   if (!filteredSearch) return null;
 
@@ -50,9 +51,7 @@ export const Tutorials = () => {
         <MainSection>
           <SideWrapper>
             <FiltersWrapper>
-              {FILTERS.map((f) => (
-                <FilterGroup key={f.param} {...f} />
-              ))}
+              <FilterGroups filters={FILTERS} items={PgTutorial.all} />
             </FiltersWrapper>
           </SideWrapper>
 
@@ -85,13 +84,13 @@ export const Tutorials = () => {
 
 const Wrapper = styled.div`
   ${({ theme }) => css`
-    ${PgTheme.convertToCSS(theme.components.main.primary.tutorials.default)};
+    ${PgTheme.convertToCSS(theme.views.main.primary.tutorials.default)};
   `}
 `;
 
 const TopSection = styled.div`
   ${({ theme }) => css`
-    ${PgTheme.convertToCSS(theme.components.main.primary.tutorials.top)};
+    ${PgTheme.convertToCSS(theme.views.main.primary.tutorials.top)};
   `}
 `;
 
@@ -105,15 +104,13 @@ const MainSectionScrollWrapper = styled.div`
 
 const MainSection = styled.div`
   ${({ theme }) => css`
-    ${PgTheme.convertToCSS(
-      theme.components.main.primary.tutorials.main.default
-    )};
+    ${PgTheme.convertToCSS(theme.views.main.primary.tutorials.main.default)};
   `}
 `;
 
 const SideWrapper = styled.div`
   ${({ theme }) => css`
-    ${PgTheme.convertToCSS(theme.components.main.primary.tutorials.main.side)};
+    ${PgTheme.convertToCSS(theme.views.main.primary.tutorials.main.side)};
   `}
 `;
 
@@ -125,7 +122,7 @@ const FiltersWrapper = styled.div`
 const ContentWrapper = styled.div`
   ${({ theme }) => css`
     ${PgTheme.convertToCSS(
-      theme.components.main.primary.tutorials.main.content.default
+      theme.views.main.primary.tutorials.main.content.default
     )};
   `}
 `;

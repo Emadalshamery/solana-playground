@@ -14,7 +14,7 @@ import Menu, { MenuItemProps } from "../Menu";
 import Tooltip from "../Tooltip";
 import { Close, ShortArrow } from "../Icons";
 import { ClassName, Id } from "../../constants";
-import { Fn, PgCommon, PgTheme, PgWallet } from "../../utils/pg";
+import { CurrentWallet, Fn, PgCommon, PgTheme, PgWallet } from "../../utils/pg";
 import {
   useAutoAirdrop,
   useDarken,
@@ -45,7 +45,7 @@ const Wallet = () => {
 
   return (
     <>
-      <WalletBound id={Id.WALLET_BOUND} />
+      <WalletBound id={WALLET_BOUND_ID} />
       <Rnd
         default={{
           x: window.innerWidth - (WALLET_WIDTH + 12),
@@ -56,8 +56,9 @@ const Wallet = () => {
         minWidth={WALLET_WIDTH}
         maxWidth={WALLET_WIDTH}
         enableResizing={false}
-        bounds={"#" + Id.WALLET_BOUND}
+        bounds={"#" + WALLET_BOUND_ID}
         enableUserSelectHack={false}
+        style={{ zIndex: 1 }}
       >
         <WalletWrapper>
           <WalletTop />
@@ -70,20 +71,20 @@ const Wallet = () => {
 
 const WALLET_WIDTH = 320;
 
+const WALLET_BOUND_ID = "wallet-bound";
+
 const WalletBound = styled.div`
   ${({ theme }) => css`
     position: absolute;
     margin: ${theme.components.tabs.tab.default.height} 0.75rem
-      ${theme.components.bottom.default.height}
-      ${theme.components.sidebar.left.default.width};
-    width: calc(
-      100% - (0.75rem + ${theme.components.sidebar.left.default.width})
-    );
+      ${theme.views.bottom.default.height}
+      ${theme.views.sidebar.left.default.width};
+    width: calc(100% - (0.75rem + ${theme.views.sidebar.left.default.width}));
     height: calc(
       100% -
         (
           ${theme.components.tabs.tab.default.height} +
-            ${theme.components.bottom.default.height}
+            ${theme.views.bottom.default.height}
         )
     );
     z-index: -1;
@@ -127,10 +128,10 @@ const WalletName = () => {
   const { darken, lighten } = useDarken();
 
   const getAccountDisplayName = useCallback(
-    (accountName: string, pkStr: string) => {
+    (wallet: Pick<CurrentWallet, "name" | "publicKey">) => {
       return (
-        PgCommon.withMaxLength(accountName, 12) +
-        ` - (${PgCommon.shorten(pkStr)})`
+        PgCommon.withMaxLength(wallet.name, 12) +
+        ` - (${PgCommon.shorten(wallet.publicKey.toBase58())})`
       );
     },
     []
@@ -138,10 +139,7 @@ const WalletName = () => {
 
   // Show al lof the Playground Wallet accounts
   const pgAccounts: MenuItemProps[] = PgWallet.accounts.map((acc, i) => ({
-    name: getAccountDisplayName(
-      acc.name,
-      PgWallet.createWallet(acc).publicKey.toBase58()
-    ),
+    name: getAccountDisplayName(PgWallet.create(acc)),
     onClick: () => PgWallet.switch(i),
     hoverColor: "textPrimary",
   }));
@@ -149,7 +147,7 @@ const WalletName = () => {
   // Show all of the connected Wallet Standard accounts
   const standardAccounts: MenuItemProps[] =
     PgWallet.getConnectedStandardWallets().map((wallet) => ({
-      name: getAccountDisplayName(wallet.name, wallet.publicKey!.toBase58()),
+      name: getAccountDisplayName(wallet),
       onClick: () => {
         PgWallet.update({ state: "sol", standardName: wallet.name });
       },
@@ -170,9 +168,7 @@ const WalletName = () => {
           {!wallet.isPg && (
             <WalletTitleIcon src={wallet.icon} alt={wallet.name} />
           )}
-          <WalletTitleText>
-            {getAccountDisplayName(wallet.name, wallet.publicKey.toBase58())}
-          </WalletTitleText>
+          <WalletTitleText>{getAccountDisplayName(wallet)}</WalletTitleText>
           <ShortArrow rotate="90deg" />
         </WalletTitleWrapper>
       </Tooltip>

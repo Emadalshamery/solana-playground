@@ -73,17 +73,24 @@ const Terminal: FC<TerminalProps> = ({ cmdManager }) => {
     return () => observer.unobserve(terminalEl);
   }, [term]);
 
-  useKeybind("Ctrl+L", () => {
-    if (PgTerminal.isFocused()) term.clear();
-  });
+  useKeybind(
+    "Ctrl+L",
+    () => {
+      if (PgTerminal.isFocused()) term.clear();
+    },
+    [term]
+  );
 
   return <Wrapper ref={terminalRef} />;
 };
 
 const Wrapper = styled.div`
   ${({ theme }) => css`
-    ${PgTheme.getScrollbarCSS({ allChildren: true })};
     ${PgTheme.convertToCSS(theme.components.terminal.default)};
+
+    & .xterm {
+      padding: 0.25rem 1rem;
+    }
 
     & .xterm-viewport {
       background: inherit !important;

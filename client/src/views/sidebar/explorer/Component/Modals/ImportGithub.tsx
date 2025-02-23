@@ -70,7 +70,7 @@ export const ImportGithub = () => {
         <ExamplesSectionWrapper>
           <ExamplesTitle>Examples</ExamplesTitle>
           <ExamplesWrapper>
-            {PgFramework.frameworks.map((framework) => (
+            {PgFramework.all.map((framework) => (
               <Example key={framework.name} framework={framework} />
             ))}
           </ExamplesWrapper>
@@ -154,8 +154,8 @@ const Example: FC<ExampleProps> = ({ framework }) => (
       </Button>
 
       <Button
-        onClick={async () => {
-          await PgRouter.navigate("/" + framework.githubExample.url);
+        onClick={() => {
+          PgRouter.navigate("/" + framework.githubExample.url);
           PgView.closeModal();
         }}
         rightIcon={<Eye />}

@@ -2,10 +2,13 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { EventName } from "../../../constants";
+import { BLOCK_EXPLORERS } from "../../../block-explorers";
 import { COMMANDS } from "../../../commands";
 import { FRAMEWORKS } from "../../../frameworks";
+import { LANGUAGES } from "../../../languages";
 import { ROUTES } from "../../../routes";
 import { TUTORIALS } from "../../../tutorials";
+import { SIDEBAR } from "../../../views";
 import {
   Disposable,
   PgBlockExplorer,
@@ -15,21 +18,33 @@ import {
   PgExplorer,
   PgFramework,
   PgGlobal,
+  PgLanguage,
   PgProgramInfo,
   PgRouter,
   PgTutorial,
+  PgView,
   PgWallet,
 } from "../../../utils/pg";
-import { useDisposable, useGetStatic, useSetStatic } from "../../../hooks";
+import { useDisposable, useSetStatic } from "../../../hooks";
 
-const GlobalState = () => {
+// Set fields
+PgBlockExplorer.all = BLOCK_EXPLORERS;
+PgCommandManager.all = COMMANDS;
+PgFramework.all = FRAMEWORKS;
+PgLanguage.all = LANGUAGES;
+PgRouter.all = ROUTES;
+PgTutorial.all = TUTORIALS;
+PgView.sidebar = SIDEBAR;
+
+const Global = () => {
   useDisposable(PgGlobal.init);
   useRouter();
-  useWorkspace();
+  useExplorer();
   useDisposable(PgConnection.init);
   useDisposable(PgBlockExplorer.init); // Must be after `PgConnection` init
   useDisposable(PgWallet.init);
   useProgramInfo();
+  useTutorial();
 
   return null;
 };
@@ -54,18 +69,12 @@ const useProgramInfo = () => {
 const useRouter = () => {
   // Init
   useEffect(() => {
-    const { dispose } = PgRouter.init(ROUTES);
-    return () => dispose();
+    const { dispose } = PgRouter.init();
+    return dispose;
   }, []);
 
   // Location
   const location = useLocation();
-  useGetStatic(location, EventName.ROUTER_LOCATION);
-
-  // Navigate
-  const navigate = useNavigate();
-  useSetStatic(navigate, EventName.ROUTER_NAVIGATE);
-
   // Change method
   useEffect(() => {
     PgCommon.createAndDispatchCustomEvent(
@@ -73,10 +82,15 @@ const useRouter = () => {
       location.pathname
     );
   }, [location.pathname]);
+
+  // Navigate
+  const navigate = useNavigate();
+  useSetStatic(navigate, EventName.ROUTER_NAVIGATE);
 };
 
-/** Handle workspaces/tutorials. */
-const useWorkspace = () => {
+// TODO: Remove and handle this from explorer impl
+/** Handle explorer consistency. */
+const useExplorer = () => {
   // Handle loading state
   useEffect(() => {
     const { dispose } = PgExplorer.onDidInit(() => {
@@ -86,47 +100,25 @@ const useWorkspace = () => {
         PgExplorer.openFile(PgExplorer.tabs[0]);
       }
     });
-    return () => dispose();
-  }, []);
-
-  // Handle workspace switch
-  useEffect(() => {
-    const { dispose } = PgExplorer.onDidSwitchWorkspace(async () => {
-      const name = PgExplorer.currentWorkspaceName;
-      if (!name) {
-        PgRouter.navigate();
-        return;
-      }
-
-      // Non-editor views should not handle tutorials
-      // TODO: Add ability to handle this from route creation instead of making
-      // changes to the implementation
-      const { pathname } = await PgRouter.getLocation();
-      if (
-        PgRouter.isPathsEqual(pathname, "/tutorials") ||
-        PgRouter.isPathsEqual(pathname, "/programs")
-      ) {
-        return;
-      }
-
-      if (PgTutorial.isWorkspaceTutorial(name)) {
-        await PgTutorial.open(name);
-      } else {
-        PgExplorer.setWorkspaceName(name);
-        await PgRouter.navigate();
-      }
-    });
-    return () => dispose();
+    return dispose;
   }, []);
 };
 
-// Set commands
-PgCommandManager.commands = COMMANDS;
+/** Navigate to tutorial's route when necessary. */
+const useTutorial = () => {
+  useEffect(() => {
+    const { dispose } = PgCommon.batchChanges(() => {
+      // Don't change the UI to avoid flickering if the current workspace is
+      // a tutorial but the user is on route `/`
+      if (PgRouter.location.pathname === "/") {
+        const workspaceName = PgExplorer.currentWorkspaceName;
+        if (workspaceName && PgTutorial.isWorkspaceTutorial(workspaceName)) {
+          PgTutorial.open(workspaceName);
+        }
+      }
+    }, [PgRouter.onDidChangePath, PgExplorer.onDidInit]);
+    return dispose;
+  }, []);
+};
 
-// Set frameworks
-PgFramework.frameworks = FRAMEWORKS;
-
-// Set tutorials
-PgTutorial.tutorials = TUTORIALS;
-
-export default GlobalState;
+export default Global;

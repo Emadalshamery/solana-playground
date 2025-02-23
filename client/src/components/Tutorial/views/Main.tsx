@@ -7,16 +7,15 @@ import Markdown from "../../Markdown";
 // TODO: Fix importing views from components
 import { EditorWithTabs } from "../../../views/main/primary/EditorWithTabs";
 import { PointedArrow } from "../../Icons";
-import { PgTheme, PgTutorial } from "../../../utils/pg";
+import { PgRouter, PgTheme, PgTutorial } from "../../../utils/pg";
 import type { TutorialMainComponentProps } from "../types";
 
 export const Main: FC<TutorialMainComponentProps> = ({
+  pageNumber,
   pages,
   layout = "editor-content",
   onComplete,
 }) => {
-  const pageNumber = PgTutorial.pageNumber;
-
   const tutorialPageRef = useRef<HTMLDivElement>(null);
 
   // Scroll to the top on page change
@@ -26,18 +25,16 @@ export const Main: FC<TutorialMainComponentProps> = ({
 
   // Specific page events
   useEffect(() => {
-    if (!pageNumber) return;
-
     const page = pages[pageNumber - 1];
     if (page.onMount) return page.onMount();
   }, [pageNumber, pages]);
 
   const nextPage = () => {
-    PgTutorial.pageNumber! += 1;
+    PgTutorial.openPage(pageNumber + 1);
   };
 
   const previousPage = () => {
-    PgTutorial.pageNumber! -= 1;
+    PgTutorial.openPage(pageNumber - 1);
   };
 
   const finishTutorial = () => {
@@ -45,12 +42,10 @@ export const Main: FC<TutorialMainComponentProps> = ({
     if (onComplete) onComplete();
   };
 
-  if (!pageNumber) return null;
-
   const currentPage = pages.at(pageNumber - 1);
   if (!currentPage) {
     // This could happen if the saved page has been deleted
-    PgTutorial.pageNumber = 1;
+    PgTutorial.openPage(1);
     return null;
   }
 
@@ -72,7 +67,14 @@ export const Main: FC<TutorialMainComponentProps> = ({
       <TutorialPage ref={tutorialPageRef}>
         <TutorialContent>
           {typeof currentContent === "string" ? (
-            <Markdown>{currentContent}</Markdown>
+            <Markdown
+              rootSrc={PgRouter.location.pathname
+                .split("/")
+                .slice(0, 3)
+                .join("/")}
+            >
+              {currentContent}
+            </Markdown>
           ) : (
             currentContent
           )}
@@ -146,15 +148,13 @@ const TutorialPage = styled.div`
     overflow: auto;
     max-width: 60rem;
     padding-top: ${theme.components.tabs.tab.default.height};
-    background: ${theme.components.main.primary.tutorial.default.bg};
+    background: ${theme.views.main.primary.tutorial.default.bg};
   `}
 `;
 
 const TutorialContent = styled.div`
   ${({ theme }) => css`
-    ${PgTheme.convertToCSS(
-      theme.components.main.primary.tutorial.tutorialPage
-    )};
+    ${PgTheme.convertToCSS(theme.views.main.primary.tutorial.tutorialPage)};
   `}
 `;
 

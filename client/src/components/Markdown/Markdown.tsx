@@ -3,22 +3,42 @@ import styled, { css } from "styled-components";
 import remarkGfm from "remark-gfm";
 
 import CodeBlock from "../CodeBlock";
+import Img from "../Img";
 import Link, { LinkProps } from "../Link";
-import { PgTheme } from "../../utils/pg";
+import { PgCommon, PgRouter, PgTheme } from "../../utils/pg";
 
 interface MarkdownProps {
   /** Markdown string */
   children: string;
   /** Make all fonts the code font */
   codeFontOnly?: boolean;
+  /** Root for the `src` prop (defaults to the current path) */
+  rootSrc?: string;
 }
 
-const Markdown = (props: MarkdownProps) => (
+const Markdown = ({ rootSrc, ...props }: MarkdownProps) => (
   <StyledMarkdown
     remarkPlugins={[remarkGfm]}
     components={{
       /** Links */
       a: (props) => <Link {...(props as LinkProps)} />,
+
+      /** Images */
+      img: (props) => {
+        return (
+          <Img
+            {...props}
+            src={
+              props.src && !props.src.startsWith("/")
+                ? PgCommon.joinPaths(
+                    rootSrc ?? PgRouter.location.pathname,
+                    props.src
+                  )
+                : props.src
+            }
+          />
+        );
+      },
 
       /** Code blocks */
       pre: (props) => {

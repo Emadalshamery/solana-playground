@@ -19,6 +19,7 @@ import type {
   Wallet,
   WalletAccount,
 } from "./types";
+import type { RequiredKey } from "../types";
 
 const defaultState: Wallet = {
   state: "setup",
@@ -95,7 +96,7 @@ const derive = () => ({
             return null;
           }
 
-          return PgWallet.createWallet(currentAccount);
+          return PgWallet.create(currentAccount);
         }
 
         case "sol":
@@ -167,7 +168,7 @@ class _PgWallet {
     const accountIndex = PgWallet.accounts.findIndex((acc) => {
       return (
         (name && acc.name === name) ||
-        keypair.publicKey.toBuffer().equals(Buffer.from(acc.kp))
+        PgWallet.create(acc).publicKey.equals(keypair.publicKey)
       );
     });
     if (accountIndex !== -1) {
@@ -258,9 +259,15 @@ class _PgWallet {
    * @param keypair optional keypair, defaults to the current wallet's keypair
    */
   static export(keypair?: PgWeb3.Keypair) {
-    PgCommon.export(
-      "wallet-keypair.json",
-      keypair ? Array.from(keypair.secretKey) : PgWallet.getKeypairBytes()
+    if (!keypair) {
+      if (!PgWallet.current) throw new Error("Not connected");
+      if (!PgWallet.current.isPg) throw new Error("Not Playground Wallet");
+      keypair = PgWallet.current.keypair;
+    }
+
+    return PgCommon.export(
+      `${PgWallet.current?.name ?? "wallet"}-keypair.json`,
+      Array.from(keypair.secretKey)
     );
   }
 
@@ -310,14 +317,6 @@ class _PgWallet {
     }
   }
 
-  /** Get the keypair bytes of the current wallet. */
-  static getKeypairBytes() {
-    if (!PgWallet.current) throw new Error("Not connected");
-    if (!PgWallet.current.isPg) throw new Error("Not Playground Wallet");
-
-    return Array.from(PgWallet.current.keypair.secretKey);
-  }
-
   /**
    * Get all of the connected standard wallet adapters.
    *
@@ -326,7 +325,10 @@ class _PgWallet {
   static getConnectedStandardWallets() {
     return PgWallet.standardWallets
       .map((wallet) => wallet.adapter)
-      .filter((adapter) => adapter.connected);
+      .filter((adapter) => adapter.connected) as RequiredKey<
+      typeof PgWallet["standardWallets"][number]["adapter"],
+      "publicKey"
+    >[];
   }
 
   /**
@@ -335,7 +337,7 @@ class _PgWallet {
    * @param account wallet account to derive the instance from
    * @returns a Playground Wallet instance
    */
-  static createWallet(account: WalletAccount): CurrentWallet {
+  static create(account: WalletAccount): CurrentWallet {
     const keypair = PgWeb3.Keypair.fromSecretKey(Uint8Array.from(account.kp));
 
     return {
@@ -383,6 +385,19 @@ class _PgWallet {
     // Check whether the name exists
     const nameExists = PgWallet.accounts.some((acc) => acc.name === name);
     if (nameExists) throw new Error(`Account '${name}' already exists`);
+  }
+
+  /**
+   * Get the keypair bytes of the current wallet.
+   *
+   * NOTE: It looks like this method is not being used, but it's being used by
+   * WASM packages.
+   */
+  static getKeypairBytes() {
+    if (!PgWallet.current) throw new Error("Not connected");
+    if (!PgWallet.current.isPg) throw new Error("Not Playground Wallet");
+
+    return Array.from(PgWallet.current.keypair.secretKey);
   }
 }
 

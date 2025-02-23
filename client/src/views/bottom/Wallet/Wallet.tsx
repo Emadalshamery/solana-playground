@@ -11,7 +11,7 @@ export const Wallet = () => {
 
   // Using a callback because this function might be resolved later than the
   // mount of this component
-  const connect = useCallback(() => PgCommand.connect.run(), []);
+  const connect = useCallback(() => PgCommand.connect.execute(), []);
 
   return (
     <Tooltip element="Toggle Playground Wallet">
@@ -32,7 +32,7 @@ export const Wallet = () => {
 
 const ConnectButton = styled(Button)`
   ${({ theme }) => css`
-    ${PgTheme.convertToCSS(theme.components.bottom.connect)};
+    ${PgTheme.convertToCSS(theme.views.bottom.connect)};
   `}
 `;
 

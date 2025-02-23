@@ -1,6 +1,6 @@
 import type { ChangeEvent } from "react";
 
-import { Endpoint, EventName } from "../../constants";
+import { EventName } from "../../constants";
 import type {
   AllPartial,
   Disposable,
@@ -788,24 +788,6 @@ export class PgCommon {
   }
 
   /**
-   * @returns automatic airdrop amount
-   */
-  static getAirdropAmount(endpoint: string) {
-    switch (endpoint) {
-      case Endpoint.PLAYNET:
-        return 1000;
-      case Endpoint.LOCALHOST:
-        return 100;
-      case Endpoint.DEVNET:
-        return 5;
-      case Endpoint.TESTNET:
-        return 1;
-      default:
-        return null;
-    }
-  }
-
-  /**
    * Get send and receive event names
    *
    * @param eventName name of the custom event
@@ -1098,13 +1080,12 @@ export class PgCommon {
   }
 
   /**
-   * Append '/' to the end of the string
+   * Append '/' to the end of the string.
    *
    * @param str string to append slash to
    * @returns the slash appended string
    */
   static appendSlash(str: string) {
-    if (!str) return "";
     return str + (str.endsWith("/") ? "" : "/");
   }
 

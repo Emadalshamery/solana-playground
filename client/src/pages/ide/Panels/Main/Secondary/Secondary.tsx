@@ -37,7 +37,7 @@ const Secondary = () => {
 
   const [el, setEl] = useState<NullableJSX>(null);
   useAsyncEffect(async () => {
-    const { default: PageComponent } = await pageInfo.importElement();
+    const { default: PageComponent } = await pageInfo.importComponent();
     setEl(<PageComponent />);
   }, [pageInfo]);
 
@@ -146,8 +146,23 @@ const Secondary = () => {
     >
       <Wrapper>
         <Topbar>
+          {MAIN_SECONDARY.length > 1 && (
+            <TabsWrapper>
+              {MAIN_SECONDARY.map((p) => (
+                <Tab
+                  key={p.name}
+                  isCurrent={page === p.name}
+                  onClick={() => setPage(p.name)}
+                >
+                  {p.name}
+                </Tab>
+              ))}
+            </TabsWrapper>
+          )}
+
           <TerminalProgress />
-          <ButtonsWrapper>
+
+          <ActionsWrapper>
             {actions.map((action) => (
               <Button
                 key={action.name}
@@ -164,7 +179,7 @@ const Secondary = () => {
                 {action.icon}
               </Button>
             ))}
-          </ButtonsWrapper>
+          </ActionsWrapper>
         </Topbar>
 
         <ErrorBoundary>{el}</ErrorBoundary>
@@ -175,13 +190,14 @@ const Secondary = () => {
 
 const Wrapper = styled.div`
   ${({ theme }) => css`
-    ${PgTheme.convertToCSS(theme.components.main.secondary.default)};
+    ${PgTheme.convertToCSS(theme.views.main.secondary.default)};
 
     & > div:first-child {
       height: ${getMinHeight()}px;
     }
 
     & > div:last-child {
+      ${PgTheme.getScrollbarCSS({ allChildren: true })};
       height: calc(100% - ${getMinHeight()}px);
       overflow: hidden;
     }
@@ -195,13 +211,27 @@ const Topbar = styled.div`
   padding: 0 1rem;
 `;
 
+const TabsWrapper = styled.div`
+  ${({ theme }) => css`
+    ${PgTheme.convertToCSS(theme.views.main.secondary.tabs.default)};
+  `}
+`;
+
+const Tab = styled.div<{ isCurrent: boolean }>`
+  ${({ theme, isCurrent }) => css`
+    ${PgTheme.convertToCSS(theme.views.main.secondary.tabs.tab.default)};
+    ${isCurrent &&
+    PgTheme.convertToCSS(theme.views.main.secondary.tabs.tab.current)};
+  `}
+`;
+
 const TerminalProgress = () => {
   const [progress, setProgress] = useState(0);
   useSetStatic(setProgress, EventName.TERMINAL_PROGRESS_SET);
   return <ProgressBar value={progress} />;
 };
 
-const ButtonsWrapper = styled.div`
+const ActionsWrapper = styled.div`
   display: flex;
   gap: 0.25rem;
   margin-left: 0.5rem;

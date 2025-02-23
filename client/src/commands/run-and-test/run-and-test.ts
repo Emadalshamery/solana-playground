@@ -2,6 +2,7 @@ import {
   PgClientImporter,
   PgCommon,
   PgExplorer,
+  PgLanguage,
   PgTerminal,
 } from "../../utils/pg";
 import { createArgs, createCmd } from "../create";
@@ -18,10 +19,25 @@ const createCommonArgs = (parentPath: string) =>
       name: "paths",
       optional: true,
       multiple: true,
-      values: () => {
+      values: (token) => {
+        if (token.startsWith(PgExplorer.PATHS.ROOT_DIR_PATH)) {
+          const path = token.endsWith("/")
+            ? token
+            : PgExplorer.getParentPathFromPath(token);
+          const folder = PgExplorer.getFolderContent(path);
+          return [
+            ...folder.files
+              .map((name) => PgCommon.joinPaths(path, name))
+              .filter(PgLanguage.getIsPathJsLike),
+            ...folder.folders
+              .map((name) => PgCommon.joinPaths(path, name))
+              .map(PgCommon.appendSlash),
+          ];
+        }
+
         return PgExplorer.getAllFiles()
           .map(([path]) => path)
-          .filter(PgExplorer.isFileJsLike)
+          .filter(PgLanguage.getIsPathJsLike)
           .map(PgExplorer.getRelativePath)
           .filter((path) => path.startsWith(parentPath))
           .map((path) => path.replace(PgCommon.appendSlash(parentPath), ""));
@@ -33,14 +49,14 @@ export const run = createCmd({
   name: "run",
   description: "Run script(s)",
   args: createCommonArgs(PgExplorer.PATHS.CLIENT_DIRNAME),
-  run: (input) => processCommon({ paths: input.args.paths, isTest: false }),
+  handle: (input) => processCommon({ paths: input.args.paths, isTest: false }),
 });
 
 export const test = createCmd({
   name: "test",
   description: "Run test(s)",
   args: createCommonArgs(PgExplorer.PATHS.TESTS_DIRNAME),
-  run: (input) => processCommon({ paths: input.args.paths, isTest: true }),
+  handle: (input) => processCommon({ paths: input.args.paths, isTest: true }),
 });
 
 /**
@@ -74,7 +90,7 @@ const processCommon = async (params: {
       if (!code) throw new Error(`File '${path}' doesn't exist`);
 
       const fileName = PgExplorer.getItemNameFromPath(path);
-      if (!PgExplorer.isFileJsLike(fileName)) {
+      if (!PgLanguage.getIsPathJsLike(fileName)) {
         throw new Error(`File '${fileName}' is not a script file`);
       }
 
@@ -102,7 +118,7 @@ const processCommon = async (params: {
   }
 
   // Run all files inside the folder
-  for (const fileName of folder.files.filter(PgExplorer.isFileJsLike)) {
+  for (const fileName of folder.files.filter(PgLanguage.getIsPathJsLike)) {
     const code = PgExplorer.getFileContent(
       PgCommon.joinPaths(folderPath, fileName)
     )!;

@@ -1,11 +1,11 @@
-import { formatList, PgCommandManager, PgTerminal } from "../../utils/pg";
+import { PgCommandManager, PgTerminal } from "../../utils/pg";
 import { createCmd } from "../create";
 
 export const help = createCmd({
   name: "help",
   description: "Print help message",
-  run: () => {
-    const cmds = Object.values(PgCommandManager.commands);
-    PgTerminal.log("Commands:\n\n" + formatList(cmds));
+  handle: () => {
+    const cmds = Object.values(PgCommandManager.all);
+    PgTerminal.log("Commands:\n\n" + PgTerminal.formatList(cmds));
   },
 });

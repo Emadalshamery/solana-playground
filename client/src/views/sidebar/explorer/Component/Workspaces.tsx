@@ -123,9 +123,10 @@ const WorkspaceSelect = () => {
         value={value}
         onChange={async (props) => {
           const name = props?.value!;
-          if (PgExplorer.currentWorkspaceName !== name) {
-            await PgExplorer.switchWorkspace(name);
-          }
+          if (PgExplorer.currentWorkspaceName === name) return;
+
+          if (PgTutorial.isWorkspaceTutorial(name)) await PgTutorial.open(name);
+          else await PgExplorer.switchWorkspace(name);
         }}
       />
     </SelectWrapper>

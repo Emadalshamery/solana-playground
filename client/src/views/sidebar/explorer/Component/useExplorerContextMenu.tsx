@@ -7,6 +7,7 @@ import {
   PgCommon,
   PgExplorer,
   PgGlobal,
+  PgLanguage,
   PgView,
 } from "../../../../utils/pg";
 import { useRenderOnChange } from "../../../../hooks";
@@ -51,10 +52,16 @@ export const useExplorerContextMenu = () => {
       isFolder: itemType.folder,
       isProgramFolder:
         itemType.folder && itemName === PgExplorer.PATHS.SRC_DIRNAME,
-      isClient: itemType.file && PgExplorer.getIsItemClientFromEl(selectedEl),
+      isClient:
+        itemType.file &&
+        PgLanguage.getIsPathJsLike(itemPath) &&
+        !itemPath.includes(".test"),
       isClientFolder:
         itemType.folder && itemName === PgExplorer.PATHS.CLIENT_DIRNAME,
-      isTest: itemType.file && PgExplorer.getIsItemTestFromEl(selectedEl),
+      isTest:
+        itemType.file &&
+        PgLanguage.getIsPathJsLike(itemPath) &&
+        itemPath.includes(".test"),
       isTestFolder:
         itemType.folder && itemName === PgExplorer.PATHS.TESTS_DIRNAME,
     };
@@ -110,35 +117,35 @@ export const useExplorerContextMenu = () => {
   }, []);
 
   const addClient = useCallback(async () => {
-    await PgCommand.run.run();
+    await PgCommand.run.execute();
   }, []);
 
   const addTests = useCallback(async () => {
-    await PgCommand.test.run();
+    await PgCommand.test.execute();
   }, []);
 
   const runBuild = useCallback(async () => {
-    await PgCommand.build.run();
+    await PgCommand.build.execute();
   }, []);
 
   const runDeploy = useCallback(async () => {
-    await PgCommand.deploy.run();
+    await PgCommand.deploy.execute();
   }, []);
 
   const runClient = useCallback(async () => {
-    await PgCommand.run.run(getPath());
+    await PgCommand.run.execute(getPath());
   }, [getPath]);
 
   const runTest = useCallback(async () => {
-    await PgCommand.test.run(getPath());
+    await PgCommand.test.execute(getPath());
   }, [getPath]);
 
   const runClientFolder = useCallback(async () => {
-    await PgCommand.run.run();
+    await PgCommand.run.execute();
   }, []);
 
   const runTestFolder = useCallback(async () => {
-    await PgCommand.test.run();
+    await PgCommand.test.execute();
   }, []);
 
   return {

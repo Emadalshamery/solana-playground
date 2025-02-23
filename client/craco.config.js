@@ -3,6 +3,7 @@ const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const CircularDependencyPlugin = require("circular-dependency-plugin");
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
 
 module.exports = {
   webpack: {
@@ -121,6 +122,42 @@ module.exports = {
           PACKAGES: fs.readFileSync(
             path.join("..", "supported-packages.json"),
             "utf8"
+          ),
+
+          /** Array of all markdown tutorial data */
+          MARKDOWN_TUTORIALS: defineFromPublicDir(
+            "tutorials",
+            (dirItems, tutorialsPath) => {
+              return dirItems
+                .filter((tutorialName) => !tutorialName.startsWith("_"))
+                .map((tutorialName) => {
+                  const tutorialDir = path.join(tutorialsPath, tutorialName);
+                  const tutorialDataFileName = fs
+                    .readdirSync(tutorialDir)
+                    .find((name) => name === "data.json");
+                  if (!tutorialDataFileName) return null;
+
+                  const data = JSON.parse(
+                    fs.readFileSync(
+                      path.join(tutorialDir, tutorialDataFileName)
+                    )
+                  );
+                  data.pageCount = fs.readdirSync(
+                    path.join(tutorialDir, "pages")
+                  ).length;
+                  data.unixTimestamp = execSync(
+                    "git log --follow --format=%ad --date=unix --diff-filter=A .",
+                    { cwd: tutorialDir }
+                  )
+                    .toString()
+                    .split("\n")
+                    .filter(Boolean)
+                    .pop();
+
+                  return data;
+                })
+                .filter(Boolean);
+            }
           ),
 
           /** Map of kebab-case tutorial names to thumbnail file names */

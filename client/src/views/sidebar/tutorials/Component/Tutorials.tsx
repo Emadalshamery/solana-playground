@@ -5,7 +5,6 @@ import TutorialsSkeleton from "./TutorialsSkeleton";
 import Text from "../../../../components/Text";
 import {
   PgCommon,
-  PgRouter,
   PgTutorial,
   TutorialData,
   TutorialMetadata,
@@ -17,16 +16,6 @@ type TutorialsData = { completed: TutorialFullData; ongoing: TutorialFullData };
 
 const Tutorials = () => {
   const [tutorialsData, setTutorialsData] = useState<TutorialsData>();
-
-  // TODO: Handle this from sidebar page impl
-  // Handle path
-  useAsyncEffect(async () => {
-    const TUTORIALS_PATH: RoutePath = "/tutorials";
-    const { pathname } = await PgRouter.getLocation();
-    if (!pathname.startsWith(TUTORIALS_PATH)) {
-      await PgRouter.navigate(TUTORIALS_PATH);
-    }
-  }, []);
 
   // Get tutorial data
   useAsyncEffect(async () => {
@@ -42,7 +31,7 @@ const Tutorials = () => {
     const tutorialNames = PgTutorial.getUserTutorialNames();
     const data: TutorialsData = { completed: [], ongoing: [] };
     for (const tutorialName of tutorialNames) {
-      const tutorialData = PgTutorial.getTutorialData(tutorialName);
+      const tutorialData = PgTutorial.all.find((t) => t.name === tutorialName);
       if (!tutorialData) continue;
 
       const tutorialMetadata = await PgTutorial.getMetadata(tutorialName);
@@ -114,7 +103,7 @@ const TutorialWrapper = styled.div<{ progress: number }>`
   ${({ theme, progress }) => css`
     margin-top: 1rem;
     padding: 0.75rem 1rem;
-    background: ${theme.components.sidebar.right.default.otherBg};
+    background: ${theme.views.sidebar.right.default.otherBg};
     border-radius: ${theme.default.borderRadius};
     box-shadow: ${theme.default.boxShadow};
     transition: all ${theme.default.transition.duration.medium}

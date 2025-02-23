@@ -11,31 +11,30 @@ import SidebarButton from "./SidebarButton";
 import Settings from "./Settings";
 import Link from "../../../../../components/Link";
 import Popover from "../../../../../components/Popover";
-import { SIDEBAR } from "../../../../../views/sidebar";
 import { ClassName, GITHUB_URL } from "../../../../../constants";
-import { PgCommon, PgTheme } from "../../../../../utils/pg";
+import { PgCommon, PgTheme, PgView } from "../../../../../utils/pg";
 
 interface LeftProps<P = SidebarPageName, W = number> {
-  sidebarPage: P;
-  setSidebarPage: Dispatch<SetStateAction<P>>;
-  oldSidebarRef: MutableRefObject<P>;
+  pageName: P;
+  setPageName: Dispatch<SetStateAction<P>>;
+  oldPageName: MutableRefObject<P>;
   width: W;
   setWidth: Dispatch<SetStateAction<W>>;
   oldWidth: W;
 }
 
 const Left: FC<LeftProps> = ({
-  sidebarPage,
-  setSidebarPage,
-  oldSidebarRef,
+  pageName,
+  setPageName,
+  oldPageName,
   width,
   setWidth,
   oldWidth,
 }) => {
-  useActiveTab({ sidebarPage, oldSidebarRef, width });
+  useActiveTab({ pageName, oldPageName, width });
 
   const handleSidebarChange = (value: SidebarPageName) => {
-    setSidebarPage((state) => {
+    setPageName((state) => {
       if (!width) setWidth(oldWidth);
       else if (state === value) setWidth(0);
 
@@ -47,7 +46,7 @@ const Left: FC<LeftProps> = ({
     <Wrapper>
       <Icons>
         <Top>
-          {SIDEBAR.map((page) => (
+          {PgView.sidebar.map((page) => (
             <SidebarButton
               key={page.name}
               tooltipEl={PgCommon.getKeybindTextOS(page.title)}
@@ -76,22 +75,22 @@ const Left: FC<LeftProps> = ({
 };
 
 const useActiveTab = <P extends SidebarPageName>({
-  sidebarPage,
-  oldSidebarRef,
+  pageName,
+  oldPageName,
   width,
-}: Pick<LeftProps<P>, "sidebarPage" | "oldSidebarRef" | "width">) => {
+}: Pick<LeftProps<P>, "pageName" | "oldPageName" | "width">) => {
   const theme = useTheme();
 
   useEffect(() => {
-    const oldEl = document.getElementById(getId(oldSidebarRef.current));
+    const oldEl = document.getElementById(getId(oldPageName.current));
     oldEl?.classList.remove(ClassName.ACTIVE);
 
-    const current = width !== 0 ? sidebarPage : "Closed";
+    const current = width !== 0 ? pageName : "Closed";
     const newEl = document.getElementById(getId(current));
     newEl?.classList.add(ClassName.ACTIVE);
 
-    oldSidebarRef.current = sidebarPage;
-  }, [sidebarPage, oldSidebarRef, width, theme.name]);
+    oldPageName.current = pageName;
+  }, [pageName, oldPageName, width, theme.name]);
 };
 
 const getId = (id: string) => "sidebar" + id;
@@ -103,7 +102,7 @@ const Wrapper = styled.div`
     user-select: none;
     overflow: hidden;
 
-    ${PgTheme.convertToCSS(theme.components.sidebar.left.default)};
+    ${PgTheme.convertToCSS(theme.views.sidebar.left.default)};
   `}
 `;
 

@@ -15,13 +15,19 @@ export type TutorialComponentProps = {
 
 export type TutorialAboutComponentProps = Pick<
   TutorialComponentProps,
-  "about" | "files" | "defaultOpenFile" | "pages"
->;
+  "about"
+> & {
+  /** Start the tutorial. */
+  start: () => Promise<void>;
+};
 
 export type TutorialMainComponentProps = Pick<
   TutorialComponentProps,
   "pages" | "layout" | "onComplete"
->;
+> & {
+  /** Current page number */
+  pageNumber: number;
+};
 
 type Page = {
   /** Content of the page, can be either:

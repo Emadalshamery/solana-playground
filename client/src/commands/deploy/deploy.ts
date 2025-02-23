@@ -16,7 +16,7 @@ import { createCmd } from "../create";
 export const deploy = createCmd({
   name: "deploy",
   description: "Deploy your program",
-  run: async () => {
+  handle: async () => {
     PgGlobal.update({ deployState: "loading" });
 
     PgTerminal.log(
@@ -75,7 +75,7 @@ async function checkWallet() {
     PgTerminal.log(PgTerminal.info("Connecting..."));
 
     const needsSetup = PgWallet.state === "setup";
-    const connected = await PgCommand.connect.run();
+    const connected = await PgCommand.connect.execute();
     if (!connected) throw new Error("Wallet must be connected.");
 
     PgTerminal.log("");
@@ -90,7 +90,7 @@ async function checkWallet() {
 async function checkProgram() {
   if (!PgProgramInfo.uuid && !PgProgramInfo.importedProgram?.buffer.length) {
     PgTerminal.log("Warning: Program is not built.");
-    await PgCommand.build.run();
+    await PgCommand.build.execute();
   }
 
   if (!PgProgramInfo.pk) {
@@ -154,7 +154,7 @@ const processDeploy = async () => {
   const wallet = PgWallet.current!;
   const [pgWallet, standardWallet] = wallet.isPg
     ? [wallet, null]
-    : [PgWallet.createWallet(PgWallet.accounts[0]), wallet];
+    : [PgWallet.create(PgWallet.accounts[0]), wallet];
 
   // Decide whether it's an initial deployment or an upgrade and calculate
   // how much SOL user needs before creating the buffer.
@@ -168,33 +168,27 @@ const processDeploy = async () => {
     ? bufferBalance
     : 3 * bufferBalance;
   if (userBalance < requiredBalanceWithoutFees) {
-    const airdropAmount = PgCommon.getAirdropAmount(connection.rpcEndpoint);
-    if (airdropAmount !== null) {
-      const term = await PgTerminal.get();
-      const msg = programExists
-        ? `Initial deployment costs ${PgTerminal.bold(
-            PgCommon.lamportsToSol(requiredBalanceWithoutFees).toFixed(2)
-          )} SOL but you have ${PgTerminal.bold(
-            PgCommon.lamportsToSol(userBalance).toFixed(2)
-          )} SOL. ${PgTerminal.bold(
-            PgCommon.lamportsToSol(bufferBalance).toFixed(2)
-          )} SOL will be refunded at the end.`
-        : `Upgrading costs ${PgTerminal.bold(
-            PgCommon.lamportsToSol(bufferBalance).toFixed(2)
-          )} SOL but you have ${PgTerminal.bold(
-            PgCommon.lamportsToSol(userBalance).toFixed(2)
-          )} SOL. ${PgTerminal.bold(
-            PgCommon.lamportsToSol(bufferBalance).toFixed(2)
-          )} SOL will be refunded at the end.`;
-      term.println(`Warning: ${msg}`);
-      const confirmed = await term.waitForUserInput(
-        "You don't have enough SOL to complete the deployment. Would you like to request an airdrop?",
-        { confirm: true, default: "yes" }
-      );
-      if (!confirmed) throw new Error("Insufficient balance");
+    const msg = `${
+      programExists ? "Upgrading" : "Initial deployment"
+    } costs ${PgTerminal.bold(
+      PgCommon.lamportsToSol(requiredBalanceWithoutFees).toFixed(2)
+    )} SOL but you have ${PgTerminal.bold(
+      PgCommon.lamportsToSol(userBalance).toFixed(2)
+    )} SOL. ${PgTerminal.bold(
+      PgCommon.lamportsToSol(bufferBalance).toFixed(2)
+    )} SOL will be refunded at the end.`;
+    const airdropAmount = PgConnection.getAirdropAmount();
+    if (airdropAmount === null) throw new Error(msg);
 
-      await PgCommand.solana.run("airdrop", airdropAmount.toString());
-    }
+    const term = await PgTerminal.get();
+    term.println(`Warning: ${msg}`);
+    const confirmed = await term.waitForUserInput(
+      "You don't have enough SOL to complete the deployment. Would you like to request an airdrop?",
+      { confirm: true, default: "yes" }
+    );
+    if (!confirmed) throw new Error("Insufficient balance");
+
+    await PgCommand.solana.execute("airdrop", airdropAmount.toString());
   }
 
   // If deploying from a standard wallet, transfer the required lamports for

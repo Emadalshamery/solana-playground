@@ -20,7 +20,8 @@ const FeaturedTutorial: FC<FeaturedTutorialProps> = ({ tutorial }) => (
       <RightTopWrapper>
         <Name>{tutorial.name}</Name>
         <Description>{tutorial.description}</Description>
-
+      </RightTopWrapper>
+      <RightBottomWrapper>
         <TutorialDetails
           details={[
             { kind: "level", data: tutorial.level },
@@ -30,11 +31,10 @@ const FeaturedTutorial: FC<FeaturedTutorialProps> = ({ tutorial }) => (
             // { kind: "categories", data: tutorial.categories },
           ]}
         />
-      </RightTopWrapper>
-      <RightBottomWrapper>
+
         <Button
           onClick={() => PgTutorial.open(tutorial.name)}
-          kind="primary"
+          kind="secondary"
           fontWeight="bold"
         >
           START LEARNING
@@ -47,12 +47,20 @@ const FeaturedTutorial: FC<FeaturedTutorialProps> = ({ tutorial }) => (
 const Wrapper = styled.div`
   ${({ theme }) => css`
     ${PgTheme.convertToCSS(
-      theme.components.main.primary.tutorials.main.content.featured
+      theme.views.main.primary.tutorials.main.content.featured
     )};
   `}
 `;
 
-const LeftWrapper = styled.div``;
+const LeftWrapper = styled.div`
+  ${({ theme }) => css`
+    border-top-left-radius: ${theme.views.main.primary.tutorials.main.content
+      .featured.borderRadius};
+    border-bottom-left-radius: ${theme.views.main.primary.tutorials.main.content
+      .featured.borderRadius};
+    overflow: hidden;
+  `}
+`;
 
 const Thumbnail = styled(Img)`
   width: 100%;
@@ -85,7 +93,12 @@ const Description = styled.div`
 `;
 
 const RightBottomWrapper = styled.div`
-  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  & > button {
+    margin-left: auto;
+  }
 `;
 
 export default FeaturedTutorial;

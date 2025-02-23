@@ -1,13 +1,13 @@
-import { TUTORIAL_CATEGORIES, TUTORIAL_FRAMEWORKS } from "../../../../utils/pg";
+import { PgFramework, TUTORIAL_CATEGORIES } from "../../../../utils/pg";
 
 /** All program filters */
 export const FILTERS = [
   {
     param: "framework",
-    filters: TUTORIAL_FRAMEWORKS.filter((f) => f !== "Seahorse"),
+    filters: PgFramework.all.map((f) => f.name),
   },
   {
     param: "categories",
-    filters: TUTORIAL_CATEGORIES.filter((c) => c !== "Gaming"),
+    filters: TUTORIAL_CATEGORIES,
   },
 ] as const;

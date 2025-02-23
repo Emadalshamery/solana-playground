@@ -1,14 +1,14 @@
 import { PgCommon } from "./common";
-import { Lang, PgExplorer, TupleFiles } from "./explorer";
+import { PgExplorer, TupleFiles } from "./explorer";
 import type { RequiredKey, SyncOrAsync } from "./types";
 
-/** Custom framework parameter */
-export type FrameworkImpl<N extends string> = {
+/** Framework creation parameter */
+export type FrameworkParam<N extends string> = {
   /** Framework name */
   name: N;
 
   /** Framework program language */
-  language: Lang;
+  language: LanguageName;
 
   /** Image icon src */
   icon: string;
@@ -69,13 +69,13 @@ export type FrameworkImpl<N extends string> = {
 
 /** Created framework */
 export type Framework<N extends string = string> = RequiredKey<
-  FrameworkImpl<N>,
+  FrameworkParam<N>,
   "getIsCurrent" | "importFiles" | "importFromPlayground" | "importToPlayground"
 >;
 
 export class PgFramework {
   /** All frameworks */
-  static frameworks: Framework[];
+  static all: Framework<FrameworkName>[];
 
   /**
    * Get the framework from its name.
@@ -84,7 +84,7 @@ export class PgFramework {
    * @returns the framework
    */
   static get(name: FrameworkName) {
-    return this.frameworks.find((f) => f.name === name)!;
+    return this.all.find((f) => f.name === name)!;
   }
 
   /**
@@ -94,7 +94,7 @@ export class PgFramework {
    * @returns the framework
    */
   static async getFromFiles(files: TupleFiles = PgExplorer.getAllFiles()) {
-    for (const framework of this.frameworks) {
+    for (const framework of this.all) {
       const isCurrent = await framework.getIsCurrent(files);
       if (isCurrent) return framework;
     }
