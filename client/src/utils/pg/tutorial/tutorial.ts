@@ -148,6 +148,9 @@ class _PgTutorial {
    * @param name tutorial name
    */
   static async open(name: string) {
+    // Do not open if it's already open
+    if (PgTutorial.data?.name === name && PgTutorial.page) return;
+
     const tutorialPath = `/tutorials/${PgCommon.toKebabFromTitle(name)}`;
     if (this.isStarted(name)) {
       try {
@@ -205,8 +208,8 @@ class _PgTutorial {
       // Initial tutorial setup
       await PgExplorer.newWorkspace(name, params);
 
-      PgTutorial.update({ completed: false, pageNumber: 1 });
       pageToOpen = PgTutorial.page ?? 1;
+      PgTutorial.update({ completed: false, pageNumber: pageToOpen });
     } else {
       // Get the saved page
       const { pageNumber } = await this.getMetadata(name);
